@@ -50,7 +50,12 @@ const showChart = (bindto, data) => {
   });
 };
 
-showChart("#chart", data);
+const redraw = () => {
+  showChart("#chart", data);
+};
+
+setInterval(redraw, 5 * 60 * 1000);
+redraw();
 
 </script>
 
