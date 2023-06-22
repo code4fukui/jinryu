@@ -1,16 +1,3 @@
-# jinryu
-
-## daily backup
-
-### setup
-
-```sh
-mkdir .github
-mkdir .github/workflows
-cat > .github/workflows/scheduled-backup.yml
-```
-
-```yml
 name: Scheduled 
 
 on:
@@ -37,5 +24,3 @@ jobs:
           git add .
           git commit -m 'update data' && git push ${REPO} HEAD:${{github.event.pull_request.head.ref}} || true
           git push
-```
-
