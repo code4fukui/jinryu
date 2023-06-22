@@ -28,8 +28,10 @@ jobs:
         with:
           deno-version: v1.x
       - name: make
+        env:
+          SECRET_CODE: ${{ secrets.code }}
         run: |
-          deno run -A backupDataByDate.js
+          deno run -A https://code4fukui.github.io/MixSoda/backup.js $SECRET_CODE
       - name: commit and push
         run: |
           git config --global user.email "workflow@example.com"
