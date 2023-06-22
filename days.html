@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+</head><body>
+<h1>人流データ</h1>
+
+<div id=chart></div>
+  
+<script type="module">
+import { CSV } from "https://js.sabae.cc/CSV.js";
+import { DateTime } from "https://js.sabae.cc/DateTime.js";
+import { ArrayUtil } from "https://js.sabae.cc/ArrayUtil.js";
+
+import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
+const c3 = initC3(window);
+
+const param = new URL(location.href).searchParams;
+const seliccid = param.get("iccid") || "8981040000001207740";
+
+const fetchData = async () => {
+  const url = "https://mixsoda.io:2048/2uoncrynowwq3g59.csv?from=600000";
+  const data = await CSV.fetchJSON(url);
+  data.forEach(d => {
+    const dt = new DateTime(d.utc * 1000);
+    d.dt = dt.toString().substring(0, 19).replace("T", " ");
+    //d.dt = dt.toString().substring(0, 10).replace("T", " ");
+    delete d.utc;
+    d.data = parseInt(d.data, 16);
+  });
+  console.log(data);
+
+  const res = {};
+  const dates = ArrayUtil.toUnique(data.map(d => d.dt.substring(0, "2023-06-19".length)));
+  for (const date of dates) {
+    const datad = data.filter(d => d.dt.startsWith(date) && d.iccid == seliccid).map(d => ({ t: d.dt.substring("2023-06-19T".length, "2023-06-19T00:00:00".length), n: d.data }));
+    res[date] = datad;
+  }
+  return res;
+};
+
+const showChart = (bindto, data) => {
+  const dt = [];
+  for (let i = 0; i < 24; i++) {
+    const h = i < 10 ? "0" + i : "" + i;
+    dt.push(h);
+  }
+  const days = Object.keys(data);
+  const cnt = [];
+  for (const day of days) {
+    const data1 = [];
+    data1.push(day);
+    const data0 = data[day];
+    console.log(data0);
+    for (const h of dt) {
+      const f = data0.filter(d => d.t.startsWith(h));
+      if (f.length) {
+        const dd = f.reduce((prev, d) => prev + d.n, 0);
+        data1.push(dd);
+      } else {
+        data1.push(NaN);
+      }
+    }
+    cnt.push(data1);
+  }
+  console.log(dt, cnt);
+  const chart = c3.generate({
+    data: {
+        columns: [
+            //['hour', ...dt],
+            ...cnt,
+        ]
+    },
+  });
+};
+
+const redraw = async () => {
+  const data = await fetchData();
+  showChart("#chart", data);
+};
+
+setInterval(redraw, 5 * 60 * 1000);
+redraw();
+
+</script>
+
+<script type="module" src="https://js.sabae.cc/QRCode.js"></script>
+<qr-code></qr-code>
