@@ -1,6 +1,6 @@
 # jinryu
 
-## daily backup
+## daily backup with [MixSoda-util](https://github.com/code4fukui/MixSoda-util/)
 
 ### setup
 
@@ -31,7 +31,7 @@ jobs:
         env:
           SECRET_CODE: ${{ secrets.code }}
         run: |
-          deno run -A https://code4fukui.github.io/MixSoda/backup.js $SECRET_CODE
+          deno run -A https://code4fukui.github.io/MixSoda-util/backup.js $SECRET_CODE
       - name: commit and push
         run: |
           git config --global user.email "workflow@example.com"
