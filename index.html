@@ -46,6 +46,18 @@ const showChart = (bindto, data) => {
                 //format: '%Y-%m-%d %H' // %H:%M:%S', //+09:00'
               }
         }
+    },
+    options: {
+      scales: {
+          yAxes: [
+              {
+                  ticks: {
+                      min: 0,
+                      max: 500,
+                  }
+			        }
+		      ]
+	    }
     }
   });
 };
