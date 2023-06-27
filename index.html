@@ -4,20 +4,11 @@
 <div id=chart></div>
   
 <script type="module">
-import { CSV } from "https://js.sabae.cc/CSV.js";
+import { fetchDataJinryu } from "./fetchDataJinryu.js";
 import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
-import { DateTime } from "https://js.sabae.cc/DateTime.js";
 const c3 = initC3(window);
 
-const url = "https://mixsoda.io:2048/2uoncrynowwq3g59.csv?from=600000";
-const data = await CSV.fetchJSON(url);
-data.forEach(d => {
-  const dt = new DateTime(d.utc * 1000);
-  d.dt = dt.toString().substring(0, 19).replace("T", " ");
-  //d.dt = dt.toString().substring(0, 10).replace("T", " ");
-  delete d.utc;
-  d.data = parseInt(d.data, 16);
-});
+const data = await fetchDataJinryu();
 console.log(data);
 
 const param = new URL(location.href).searchParams;
