@@ -9,7 +9,7 @@ import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
 import { DateTime } from "https://js.sabae.cc/DateTime.js";
 const c3 = initC3(window);
 
-const url = "https://mixsoda.io:2048/2uoncrynowwq3g59.csv?from=600000";
+const url = "https://mixsoda.io:2048/2uoncrynowwq3g59.csv?from=1687772400";
 const data = await CSV.fetchJSON(url);
 data.forEach(d => {
   const dt = new DateTime(d.utc * 1000);
