@@ -68,6 +68,18 @@ const showChart = (bindto, data) => {
             ...cnt,
         ]
     },
+    options: {
+      scales: {
+        yAxes: [
+            {
+                ticks: {
+                    min: 0,
+                    max: 1000,
+                }
+			      }
+		    ]
+	    }
+    }
   });
 };
 
