@@ -1,8 +1,8 @@
 import { CSV } from "https://js.sabae.cc/CSV.js";
 import { DateTime } from "https://js.sabae.cc/DateTime.js";
 
-export const fetchDataJinryu = async () => {
-  const url = "https://mixsoda.io:2048/2uoncrynowwq3g59.csv?from=600000";
+export const fetchDataJinryu = async (iccid) => {
+  const url = `https://mixsoda.io:2048/2uoncrynowwq3g59${iccid ? "/" + iccid : ""}.csv?from=1`;
   const data = await CSV.fetchJSON(url);
   data.forEach(d => {
     const dt = new DateTime(d.utc * 1000);

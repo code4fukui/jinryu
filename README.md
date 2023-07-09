@@ -41,3 +41,21 @@ jobs:
           git push
 ```
 
+### MixServer
+
+すべてのMixSoda:
+```
+GET http://mixsoda.io:2048/(token).csv[オプション]
+```
+
+特定のMixSoda:
+```
+GET http://mixsoda.io:2048/(token)/(ICCID).csv[オプション]
+```
+
+- [reference | mixsoda.io](https://mixsoda.io/reference.html)
+
+
+### 人流センサーデータ
+
+- PUSHかんたんオープンデータ [種別](https://push.sabae.cc/#type=https://push.sabae.cc/1003) [集約データCSV](https://push.sabae.cc/1005.csv)
