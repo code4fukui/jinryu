@@ -1,0 +1,61 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+</head><body>
+<h1>人流データ</h1>
+<div id=chart></div>
+  
+<script type="module">
+import { fetchDataJinryu } from "./fetchDataJinryu.js";
+import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
+const c3 = initC3(window);
+
+const data = await fetchDataJinryu();
+console.log(data);
+
+const param = new URL(location.href).searchParams;
+
+const showChart = (bindto, data) => {
+  const dt = [];
+  const cnt = [];
+  for (const d of data) {
+    dt.push(new Date(d.dt));
+    cnt.push(d.data);
+  }
+  const chart = c3.generate({
+    data: {
+        x: 'x',
+        columns: [
+            ['x', ...dt],
+            ['count', ...cnt],
+        ]
+    },
+    axis: {
+        x: {
+            type: "timeseries",
+            tick: {
+                //format: '%Y-%m-%dT%H:%M:%S+09:00'
+                format: '%Y-%m-%d %H:%M:%S', //+09:00'
+                //format: '%Y-%m-%d %H' // %H:%M:%S', //+09:00'
+                rotate: 50,
+              }
+        }
+    },
+    zoom: {
+      enabled: true,
+    }
+  });
+};
+
+const redraw = () => {
+  showChart("#chart", data);
+};
+
+setInterval(redraw, 5 * 60 * 1000);
+redraw();
+
+</script>
+
+<a href=days.html>日毎集計</a><br>
+<br>
+
+<script type="module" src="https://js.sabae.cc/QRCode.js"></script>
+<qr-code></qr-code>
