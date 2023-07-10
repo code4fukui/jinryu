@@ -59,3 +59,10 @@ GET http://mixsoda.io:2048/(token)/(ICCID).csv[オプション]
 ### 人流センサーデータ
 
 - PUSHかんたんオープンデータ [種別](https://push.sabae.cc/#type=https://push.sabae.cc/1003) [集約データCSV](https://push.sabae.cc/1005.csv)
+
+#### 設定方法
+
+1. MixServerに登録
+2. iccidを[PUSHかんたんオープンデータ 人流センサー](https://push.sabae.cc/#type=https://push.sabae.cc/1003)に登録
+3. 登録したパスコード付きURLを[qrmaker](https://code4fukui.github.io/qrmaker/)などでQRコードにして、デバイス所有者に渡す
+4. デバイス所有者に、エリア名、設置場所などを編集してもらう
