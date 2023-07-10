@@ -10,6 +10,7 @@
 2. iccidを[PUSHかんたんオープンデータ 人流センサー](https://push.sabae.cc/#type=https://push.sabae.cc/1003)に登録
 3. 登録したパスコード付きURLを[qrmaker](https://code4fukui.github.io/qrmaker/)などでQRコードにして、デバイス所有者に渡す
 4. デバイス所有者に、エリア名、設置場所などを編集してもらう
+5. 本稼働したidを[人流センサー集約データ](https://push.sabae.cc/1005)のIDsに空白なしコンマ区切りで追記する（管理者のみ）
 
 ## daily backup with [MixSoda-util](https://github.com/code4fukui/MixSoda-util/)
 
