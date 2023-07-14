@@ -2,7 +2,10 @@ import { CSV } from "https://js.sabae.cc/CSV.js";
 import { DateTime } from "https://js.sabae.cc/DateTime.js";
 
 export const fetchDataJinryu = async (iccid) => {
-  const url = `https://mixsoda.io:2048/2uoncrynowwq3g59${iccid ? "/" + iccid : ""}.csv?from=1`;
+  const pass = "SgEivZPNbkrhRLua6";
+  // const pass = "2uoncrynowwq3g59";
+  const url = `https://mixsoda.io:2048/${pass}${iccid ? "/" + iccid : ""}.csv?from=1`;
+  console.log("fetchDataJinryu", iccid, url);
   const data = await CSV.fetchJSON(url);
   data.forEach(d => {
     const dt = new DateTime(d.utc * 1000);

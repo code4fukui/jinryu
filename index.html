@@ -38,6 +38,9 @@ for (const area of areas) {
       opt.value = p.iccid;
       sellocation.appendChild(opt);
     }
+    if (sellocation.oninput) {
+      sellocation.oninput();
+    }
   };
   selarea.oninput();
 }
