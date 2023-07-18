@@ -19,6 +19,7 @@ jobs:
           SECRET_CODE: ${{ secrets.code }}
         run: |
           deno run -A https://code4fukui.github.io/MixSoda-util/backup.js $SECRET_CODE
+          deno run -A https://code4fukui.github.io/MixSoda-util/backup.js 2uoncrynowwq3g59
           deno run -A https://code4fukui.github.io/MixSoda-util/makeBackupAll.js
       - name: commit and push
         run: |
