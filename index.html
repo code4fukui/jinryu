@@ -3,7 +3,7 @@
 <h1>人流データ</h1>
 
 <select id=selarea></select><select id=sellocation></select>
-表示期間 <input type=date id=dtstart> - <input type=date id=dtend>
+表示期間 <input type=date id=dtstart> - <input type=date id=dtend> <button id=btndl>CSVダウンロード</button>
 <div id=chart1></div>
 <div id=chart></div>
 <hr>
@@ -14,6 +14,7 @@ import { ArrayUtil } from "https://js.sabae.cc/ArrayUtil.js";
 import { fetchDataJinryu } from "./fetchDataJinryu.js";
 import { Day } from "https://js.sabae.cc/DateTime.js";
 import { CSV } from "https://js.sabae.cc/CSV.js";
+import { downloadFile } from "https://js.sabae.cc/downloadFile.js";
 
 import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
 const c3 = initC3(window);
@@ -38,15 +39,11 @@ for (const area of areas) {
       opt.value = p.iccid;
       sellocation.appendChild(opt);
     }
-    if (sellocation.oninput) {
-      sellocation.oninput();
-    }
   };
   selarea.oninput();
 }
 
-const fetchData = async () => {
-  const iccid = sellocation.value;
+const fetchData = async (iccid) => {
   const data = await fetchDataJinryu(iccid);
   console.log(data);
 
@@ -64,14 +61,14 @@ const fetchData = async () => {
 
 const showChartByDay = (bindto, data) => {
   const dt = ArrayUtil.toUnique(data.map(d => d.dt.substring(0, 10)));
-  console.log(dt);
+  //console.log(dt);
   const cnt = [];
   for (const day of dt) {
     const f = data.filter(d => d.dt.startsWith(day));
     const n = f.reduce((pre, cur) => pre + parseInt(cur.data), 0);
     cnt.push(n);
   }
-  console.log(dt, cnt);
+  //console.log(dt, cnt);
   const chart = c3.generate({
     bindto,
     data: {
@@ -118,7 +115,70 @@ const makeDataByDay = (data) => {
   return res;
 };
 
+const show = async (iccid) => {
+  console.log("show", iccid);
+  //return;
+
+  //
+  const data = await fetchData(iccid);
+  if (!dtstart.value) {
+    dtstart.value = data[0].dt.substring(0, 10);
+  }
+  if (!dtend.value) {
+    dtend.value = data[data.length - 1].dt.substring(0, 10);
+  }
+  const makeData = () => {
+    const sdt = new Day(dtstart.value);
+    const edt = new Day(dtend.value);
+    const data2 = data.filter(d => new Day(d.dt.substring(0, 10)).includes(sdt, edt));
+    return data2;
+  };
+
+  const data2 = makeData();
+  showChartByDay("#chart1", data2);
+  const dataday2 = makeDataByDay(data2);
+  showChart("#chart", dataday2);
+
+  dtstart.oninput = dtend.oninput = () => {
+    const data2 = makeData();
+    showChartByDay("#chart1", data2);
+    const dataday2 = makeDataByDay(data2);
+    showChart("#chart", dataday2);
+  };
+
+  //
+  btndl.onclick = () => {
+    const sdt = new Day(dtstart.value);
+    const edt = new Day(dtend.value);
+    const data2 = data.filter(d => new Day(d.dt.substring(0, 10)).includes(sdt, edt));
+
+    console.log("CSV", data2);
+    /*
+    const dataday = makeDataByDay(data2);
+    console.log("DATADAY", dataday);
+
+    const list = [];
+    list.push(["datetime", "count"]);
+    for (let i = 0; i < cnt.length; i++) {
+      const date = cnt[i][0];
+      for (let j = 0; j < dt.length; j++) {
+        const n = cnt[i][j + 1];
+        if (!isNaN(n)) {
+          list.push([date + " " + dt[j] + ":00", n]);
+        }
+      }
+    }
+    console.log("LIST", list);
+    const csv = CSV.encode(list);
+    console.log(csv);
+    downloadFile("jinryudata.csv", csv);
+    */
+    downloadFile("jinryudata.csv", CSV.stringify(data2));
+  };
+};
+
 const showChart = (bindto, data) => {
+  console.log("SHOWCHART",data)
   const dt = [];
   for (let i = 0; i < 24; i++) {
     const h = i < 10 ? "0" + i : "" + i;
@@ -130,11 +190,11 @@ const showChart = (bindto, data) => {
     const data1 = [];
     data1.push(day);
     const data0 = data[day];
-    console.log(data0);
+    console.log("DATA0", data0, "DATA", data, days)
     for (const h of dt) {
       const f = data0.filter(d => d.t.startsWith(h));
       if (f.length) {
-        const dd = f.reduce((prev, d) => prev + d.n, 0);
+        const dd = f.reduce((prev, d) => prev + parseInt(d.n), 0);
         data1.push(dd);
       } else {
         data1.push(NaN);
@@ -142,7 +202,6 @@ const showChart = (bindto, data) => {
     }
     cnt.push(data1);
   }
-  console.log(dt, cnt);
   const chart = c3.generate({
     bindto,
     data: {
@@ -155,38 +214,14 @@ const showChart = (bindto, data) => {
 };
 
 const redraw = async () => {
-  const data = await fetchData();
-  if (!dtstart.value) {
-    dtstart.value = data[0].dt.substring(0, 10);
-  }
-  if (!dtend.value) {
-    dtend.value = data[data.length - 1].dt.substring(0, 10);
-  }
-  showChartByDay("#chart1", data);
-  dtstart.oninput = dtend.oninput = () => {
-    const sdt = new Day(dtstart.value);
-    const edt = new Day(dtend.value);
-    const data2 = data.filter(d => new Day(d.dt.substring(0, 10)).includes(sdt, edt));
-    showChartByDay("#chart1", data2);
-
-    //
-    const dataday = makeDataByDay(data);
-    const dataday2 = {};
-    for (const name in dataday) {
-      if (new Day(name).includes(sdt, edt)) {
-        dataday2[name] = dataday[name];
-      }
-    }
-    showChart("#chart", dataday2);
-  };
-
-  const dataday = makeDataByDay(data);
-  showChart("#chart", dataday);
+  const iccid = sellocation.value;
+  show(iccid);
 };
 
 setInterval(redraw, 5 * 60 * 1000);
 redraw();
 
+selarea.addEventListener("input", () => redraw());
 sellocation.oninput = () => redraw();
 </script>
 
