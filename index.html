@@ -21,10 +21,9 @@ import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
 const c3 = initC3(window);
 
 const param = new URL(location.href).searchParams;
-const seliccid = param.get("iccid") || "8981040000001207740";
+//const seliccid = param.get("iccid") || "8981040000001207740";
 
 const place = await CSV.fetchJSON("https://push.sabae.cc/1005.csv");
-console.log(place);
 const areas = ArrayUtil.toUnique(place.map(p => p.area));
 for (const area of areas) {
   const opt = document.createElement("option");
@@ -106,11 +105,11 @@ const showChartByDay = (bindto, data) => {
   */
 };
 
-const makeDataByDay = (data) => {
+const makeDataByDay = (data, iccid) => {
   const res = {};
   const dates = ArrayUtil.toUnique(data.map(d => d.dt.substring(0, "2023-06-19".length)));
   for (const date of dates) {
-    const datad = data.filter(d => d.dt.startsWith(date) && d.iccid == seliccid).map(d => ({ t: d.dt.substring("2023-06-19T".length, "2023-06-19T00:00:00".length), n: d.data }));
+    const datad = data.filter(d => d.dt.startsWith(date)).map(d => ({ t: d.dt.substring("2023-06-19T".length, "2023-06-19T00:00:00".length), n: d.data }));
     res[date] = datad;
   }
   return res;
@@ -153,7 +152,6 @@ const show = async (iccid) => {
     const edt = new Day(dtend.value);
     const data2 = data.filter(d => new Day(d.dt.substring(0, 10)).includes(sdt, edt));
 
-    console.log("CSV", data2);
     /*
     const dataday = makeDataByDay(data2);
     console.log("DATADAY", dataday);
@@ -191,7 +189,6 @@ const showChart = (bindto, data) => {
     const data1 = [];
     data1.push(day);
     const data0 = data[day];
-    console.log("DATA0", data0, "DATA", data, days)
     for (const h of dt) {
       const f = data0.filter(d => d.t.startsWith(h));
       if (f.length) {
