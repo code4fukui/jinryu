@@ -5,6 +5,17 @@ import { Base16 } from "https://code4fukui.github.io/Base16/Base16.js";
 export const fetchDataJinryuAI = async (iccid) => {
   const data = [];
 
+  // from backup
+  const data2 = await CSV.fetchJSON("data/" + iccid + "/all.csv");
+  for (const dd of data2) {
+    const d = {
+      iccid,
+      array: new Int16Array(Base16.decode(dd.n).buffer),
+      dt: dd.dt.replace("T", " "),
+    };
+    data.push(d);
+  }
+
   const pass = "SgEivZPNbkrhRLua6";
   const now = new DateTime();
   const dayfirst = new DateTime(now.day, new Time("00:00:00"));
@@ -19,8 +30,11 @@ export const fetchDataJinryuAI = async (iccid) => {
     delete d.utc;
     const array = new Int16Array(Base16.decode(d.data).buffer);
     d.array = array;
-    d.data = array.reduce((pre, n) => pre + n, 0);
     data.push(d);
   });
+  
+  for (const d of data) {
+    d.data = d.array.reduce((pre, n) => pre + n, 0);
+  }
   return data;
 };
