@@ -1,0 +1,252 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>人流データ AICAM - FTASオープンデータ</title>
+</head><body>
+<h1>人流データ AICAM - FTASオープンデータ</h1>
+
+<select id=selarea></select><select id=sellocation></select>
+表示期間 <input type=date id=dtstart> - <input type=date id=dtend> <button id=btndl>CSVダウンロード</button>
+<div id=chart1></div>
+<div id=chart></div>
+<hr>
+<a href=https://github.com/code4fukui/jinryu/>src on GitHub</a><br>
+
+<script type="module">
+import { ArrayUtil } from "https://js.sabae.cc/ArrayUtil.js";
+import { fetchDataJinryuAI } from "./fetchDataJinryuAI.js";
+import { Day } from "https://js.sabae.cc/DateTime.js";
+import { CSV } from "https://js.sabae.cc/CSV.js";
+import { downloadFile } from "https://js.sabae.cc/downloadFile.js";
+
+import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
+const c3 = initC3(window);
+
+const param = new URL(location.href).searchParams;
+//const seliccid = param.get("iccid") || "8981040000001207740";
+
+//const place = await CSV.fetchJSON("https://push.sabae.cc/1005.csv");
+const place = [
+  {
+    iccid: "8981040000001405252",
+    //area	location	spotid	type	lastUpdate	id
+    id: 1047,
+    area: "実験1",
+    location: "入口1",
+  }
+];
+
+const areas = ArrayUtil.toUnique(place.map(p => p.area));
+for (const area of areas) {
+  const opt = document.createElement("option");
+  opt.textContent = area;
+  selarea.appendChild(opt);
+  selarea.oninput = () => {
+    const area = selarea.value;
+    sellocation.innerHTML = "";
+    for (const p of place) {
+      if (p.area != area) continue;
+      const opt = document.createElement("option");
+      opt.textContent = p.location;
+      opt.value = p.iccid;
+      sellocation.appendChild(opt);
+    }
+  };
+  selarea.oninput();
+}
+
+const fetchData = async (iccid) => {
+  const data = await fetchDataJinryuAI(iccid);
+  console.log(data);
+
+  /*
+  const res = {};
+  const dates = ArrayUtil.toUnique(data.map(d => d.dt.substring(0, "2023-06-19".length)));
+  for (const date of dates) {
+    const datad = data.filter(d => d.dt.startsWith(date) && d.iccid == seliccid).map(d => ({ t: d.dt.substring("2023-06-19T".length, "2023-06-19T00:00:00".length), n: d.data }));
+    res[date] = datad;
+  }
+  return res;
+  */
+  return data;
+};
+
+const showChartByDay = (bindto, data) => {
+  const dt = ArrayUtil.toUnique(data.map(d => d.dt.substring(0, 10)));
+  //console.log(dt);
+  const cnt = [];
+  for (const day of dt) {
+    const f = data.filter(d => d.dt.startsWith(day));
+    const n = f.reduce((pre, cur) => pre + parseInt(cur.data), 0);
+    cnt.push(n);
+  }
+  //console.log(dt, cnt);
+  const chart = c3.generate({
+    bindto,
+    data: {
+      x: 'x',
+      columns: [
+        ['x', ...dt],
+        ['count', ...cnt],
+      ]
+    },
+    axis: {
+      x: {
+        type: "timeseries",
+        tick: {
+          //format: '%Y-%m-%dT%H:%M:%S+09:00'
+          format: '%Y-%m-%d', //+09:00'
+          //format: '%Y-%m-%d %H' // %H:%M:%S', //+09:00'
+          rotate: 50,
+        }
+      }
+    },
+    zoom: {
+      enabled: true,
+    }
+  });
+/*
+  const chart = c3.generate({
+    data: {
+        columns: [
+            //['hour', ...dt],
+            ...cnt,
+        ]
+    },
+  });
+  */
+};
+
+const show = async (iccid) => {
+  console.log("show", iccid);
+  //return;
+
+  //
+  const data = await fetchData(iccid);
+  if (!dtstart.value) {
+    dtstart.value = data[0].dt.substring(0, 10);
+  }
+  if (!dtend.value) {
+    dtend.value = data[data.length - 1].dt.substring(0, 10);
+  }
+  const makeData = () => {
+    const sdt = new Day(dtstart.value);
+    const edt = new Day(dtend.value);
+    const data2 = data.filter(d => new Day(d.dt.substring(0, 10)).includes(sdt, edt));
+    return data2;
+  };
+
+  const data2 = makeData();
+  showChartByDay("#chart1", data2);
+  showChart("#chart", data2);
+
+  dtstart.oninput = dtend.oninput = () => {
+    const data2 = makeData();
+    showChartByDay("#chart1", data2);
+    const dataday2 = makeDataByDay(data2);
+    showChart("#chart", dataday2);
+  };
+
+  //
+  btndl.onclick = () => {
+    const sdt = new Day(dtstart.value);
+    const edt = new Day(dtend.value);
+    const data2 = data.filter(d => new Day(d.dt.substring(0, 10)).includes(sdt, edt));
+
+    /*
+    const dataday = makeDataByDay(data2);
+    console.log("DATADAY", dataday);
+
+    const list = [];
+    list.push(["datetime", "count"]);
+    for (let i = 0; i < cnt.length; i++) {
+      const date = cnt[i][0];
+      for (let j = 0; j < dt.length; j++) {
+        const n = cnt[i][j + 1];
+        if (!isNaN(n)) {
+          list.push([date + " " + dt[j] + ":00", n]);
+        }
+      }
+    }
+    console.log("LIST", list);
+    const csv = CSV.encode(list);
+    console.log(csv);
+    downloadFile("jinryudata.csv", csv);
+    */
+    downloadFile("jinryudata.csv", CSV.stringify(data2));
+  };
+};
+
+const makeDataByDay = (data, mfe) => {
+  const res = {};
+  const dates = ArrayUtil.toUnique(data.map(d => d.dt.substring(0, "2023-06-19T".length)));
+  for (const date of dates) {
+    if (mfe >= 0) {
+      res[date] = data.filter(d => d.dt.startsWith(date)).map(d => {
+        let n = 0;
+        for (let i = 0; i < 11; i++) {
+          n += d.array[i + mfe * 11];
+        }
+        return { t: d.dt.substring("2023-06-19T".length, "2023-06-19T00:00:00".length), n };
+      });
+    } else {
+      res[date] = data.filter(d => d.dt.startsWith(date)).map(d => ({ t: d.dt.substring("2023-06-19T".length, "2023-06-19T00:00:00".length), n: d.data }));
+    }
+  }
+  return res;
+};
+
+const showChart = (bindto, data2) => {
+  const dt = [];
+  for (let i = 0; i < 24; i++) {
+    const h = i < 10 ? "0" + i : "" + i;
+    dt.push(h);
+  }
+  console.log("SHOWCHART", data2)
+
+  const cnt = [];
+  const mfes = ["合計", "女性", "男性", "不明"];
+  for (let i = 0; i < mfes.length; i++) {
+    const data = makeDataByDay(data2, i - 1);
+    const days = Object.keys(data);
+    const mfe = mfes[i];
+    for (const day of days) {
+      const data1 = [];
+      data1.push(day + " - " + mfe);
+      const data0 = data[day];
+      for (const h of dt) {
+        const f = data0.filter(d => d.t.startsWith(h));
+        if (f.length) {
+          const dd = f.reduce((prev, d) => prev + parseInt(d.n), 0);
+          data1.push(dd);
+        } else {
+          data1.push(NaN);
+        }
+      }
+      cnt.push(data1);
+    }
+  }
+  console.log("cnt", cnt);
+  const chart = c3.generate({
+    bindto,
+    data: {
+      columns: [
+        //['hour', ...dt],
+        ...cnt,
+      ]
+    },
+  });
+};
+
+const redraw = async () => {
+  const iccid = sellocation.value;
+  show(iccid);
+};
+
+setInterval(redraw, 5 * 60 * 1000);
+redraw();
+
+selarea.addEventListener("input", () => redraw());
+sellocation.oninput = () => redraw();
+</script>
+
+<script type="module" src="https://js.sabae.cc/QRCode.js"></script>
+<qr-code></qr-code>
