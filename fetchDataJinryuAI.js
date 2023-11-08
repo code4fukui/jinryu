@@ -16,6 +16,7 @@ export const fetchDataJinryuAI = async (iccid) => {
     data.push(d);
   }
 
+  // from mixserver (today)
   const pass = "SgEivZPNbkrhRLua6";
   const now = new DateTime();
   const dayfirst = new DateTime(now.day, new Time("00:00:00"));
