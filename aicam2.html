@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>人流データ AICAM - FTASオープンデータ</title>
+</head><body>
+<h1>人流データ AICAM - FTASオープンデータ</h1>
+
+<select id=selarea></select><select id=sellocation></select>
+<div id=divchart></div>
+<hr>
+<a href=https://github.com/code4fukui/jinryu/>src on GitHub</a><br>
+
+<script type="module">
+import { fetchDataJinryuAI } from "./fetchDataJinryuAI.js";
+import ApexCharts from "https://code4fukui.github.io/apexcharts.js/ApexCharts.js";
+import { ArrayUtil } from "https://js.sabae.cc/ArrayUtil.js";
+
+const param = new URL(location.href).searchParams;
+//const seliccid = param.get("iccid") || "8981040000001207740";
+
+//const place = await CSV.fetchJSON("https://push.sabae.cc/1005.csv");
+const place = [
+  {
+    iccid: "8981040000001405252",
+    //area	location	spotid	type	lastUpdate	id
+    id: 1047,
+    area: "実験1",
+    location: "入口1",
+  }
+];
+
+const areas = ArrayUtil.toUnique(place.map(p => p.area));
+for (const area of areas) {
+  const opt = document.createElement("option");
+  opt.textContent = area;
+  selarea.appendChild(opt);
+  selarea.oninput = () => {
+    const area = selarea.value;
+    sellocation.innerHTML = "";
+    for (const p of place) {
+      if (p.area != area) continue;
+      const opt = document.createElement("option");
+      opt.textContent = p.location;
+      opt.value = p.iccid;
+      sellocation.appendChild(opt);
+    }
+  };
+  selarea.oninput();
+}
+
+const fetchData = async (iccid) => {
+  const data = await fetchDataJinryuAI(iccid);
+  console.log(data);
+  return data;
+};
+
+const convert = (data0) => {
+  const mfes = ["女性", "男性", "不明"];
+  const series = [];
+  for (let j = 0; j < mfes.length; j++) {
+    const name = mfes[j];
+    const data = [];
+    for (const d of data0) {
+      let n = 0;
+      for (let i = 0; i < 11; i++) {
+        n += d.array[i + j * 11];
+      }
+      data.push([d.dt + "+00:00", n]);
+    }
+    series.push({ name, data });
+  }
+  console.log(series);
+  return series;
+};
+
+const show = async (iccid) => {
+  console.log("show", iccid);
+  //return;
+
+  //
+  const data0 = await fetchData(iccid);
+  const series = convert(data0);
+
+  //
+  const options = {
+    series,
+    chart: {
+      type: "area",
+      height: 350,
+      stacked: true,
+      events: {
+        selection: (chart, e) => {
+          console.log(new Date(e.xaxis.min))
+        }
+      },
+    },
+    colors: ["#e88", "#88e", "#eee"],
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      //curve: "monotoneCubic"
+      curve: "straight"
+    },
+    /*
+    fill: {
+      type: "gradient",
+      gradient: {
+        opacityFrom: 0.6,
+        opacityTo: 0.8,
+      }
+    },
+    */
+    legend: {
+      position: "top",
+      horizontalAlign: "left"
+    },
+    xaxis: {
+      type: "datetime"
+    },
+  };
+
+  const chart = new ApexCharts(divchart, options);
+  chart.render();
+};
+
+const redraw = async () => {
+  const iccid = sellocation.value;
+  show(iccid);
+};
+
+setInterval(redraw, 5 * 60 * 1000);
+redraw();
+
+selarea.addEventListener("input", () => redraw());
+sellocation.oninput = () => redraw();
+</script>
+
+<script type="module" src="https://js.sabae.cc/QRCode.js"></script>
+<qr-code></qr-code>
