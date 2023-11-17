@@ -20,8 +20,35 @@ import { downloadFile } from "https://js.sabae.cc/downloadFile.js";
 import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
 const c3 = initC3(window);
 
+const localStorageKey = "searchInfo";
+const saveSearchInfo = () => {
+  localStorage.setItem(localStorageKey, JSON.stringify({
+    area: selarea.value,
+    location: sellocation.value,
+    startDate: dtstart.value,
+    endDate: dtend.value
+  }));
+};
+
 const param = new URL(location.href).searchParams;
 //const seliccid = param.get("iccid") || "8981040000001207740";
+
+const setLocationOptions = () => {
+  const area = selarea.value;
+  sellocation.innerHTML = "";
+  for (const p of place) {
+    if (p.area != area) continue;
+    const opt = document.createElement("option");
+    opt.textContent = p.location;
+    opt.value = p.iccid;
+    sellocation.appendChild(opt);
+  }
+};
+
+selarea.oninput = () => {
+  setLocationOptions();
+  saveSearchInfo();
+};
 
 const place = await CSV.fetchJSON("https://push.sabae.cc/1005.csv");
 const areas = ArrayUtil.toUnique(place.map(p => p.area));
@@ -29,18 +56,6 @@ for (const area of areas) {
   const opt = document.createElement("option");
   opt.textContent = area;
   selarea.appendChild(opt);
-  selarea.oninput = () => {
-    const area = selarea.value;
-    sellocation.innerHTML = "";
-    for (const p of place) {
-      if (p.area != area) continue;
-      const opt = document.createElement("option");
-      opt.textContent = p.location;
-      opt.value = p.iccid;
-      sellocation.appendChild(opt);
-    }
-  };
-  selarea.oninput();
 }
 
 const fetchData = async (iccid) => {
@@ -115,6 +130,13 @@ const makeDataByDay = (data, iccid) => {
   return res;
 };
 
+const makeData = (data) => {
+  const sdt = new Day(dtstart.value);
+  const edt = new Day(dtend.value);
+  const data2 = data.filter(d => new Day(d.dt.substring(0, 10)).includes(sdt, edt));
+  return data2;
+};
+
 const show = async (iccid) => {
   console.log("show", iccid);
   //return;
@@ -127,20 +149,15 @@ const show = async (iccid) => {
   if (!dtend.value) {
     dtend.value = data[data.length - 1].dt.substring(0, 10);
   }
-  const makeData = () => {
-    const sdt = new Day(dtstart.value);
-    const edt = new Day(dtend.value);
-    const data2 = data.filter(d => new Day(d.dt.substring(0, 10)).includes(sdt, edt));
-    return data2;
-  };
 
-  const data2 = makeData();
+  const data2 = makeData(data);
   showChartByDay("#chart1", data2);
   const dataday2 = makeDataByDay(data2);
   showChart("#chart", dataday2);
 
   dtstart.oninput = dtend.oninput = () => {
-    const data2 = makeData();
+    saveSearchInfo();
+    const data2 = makeData(data);
     showChartByDay("#chart1", data2);
     const dataday2 = makeDataByDay(data2);
     showChart("#chart", dataday2);
@@ -216,11 +233,40 @@ const redraw = async () => {
   show(iccid);
 };
 
-setInterval(redraw, 5 * 60 * 1000);
-redraw();
+selarea.addEventListener("input", () => {
+  redraw();
+});
+sellocation.oninput = () => {
+  saveSearchInfo();
+  redraw();
+};
 
-selarea.addEventListener("input", () => redraw());
-sellocation.oninput = () => redraw();
+const storage = localStorage.getItem(localStorageKey);
+if (storage) {
+  const searchInfo = JSON.parse(storage);
+  
+  const areaOptions = [...selarea.options];
+  const areaIndex = areaOptions.findIndex(o => {
+    return o.value == searchInfo.area;
+  });
+  selarea.options[areaIndex].selected = true;
+  // locationのoptionsを作成しないとlocationが選択できないため事前に作成する
+  setLocationOptions();
+
+  const locationOptions = [...sellocation.options];
+  const locationIndex = locationOptions.findIndex(o => {
+    return o.value == searchInfo.location;
+  });
+  sellocation.options[locationIndex].selected = true;
+  
+  dtstart.value = searchInfo.startDate;
+  dtend.value = searchInfo.endDate;
+} else {
+  setLocationOptions();
+}
+
+setInterval(redraw, 5 * 60 * 1000);
+await redraw();
 </script>
 
 <script type="module" src="https://js.sabae.cc/QRCode.js"></script>
