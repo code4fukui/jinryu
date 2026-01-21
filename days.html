@@ -1,4 +1,7 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+  <script src="https://cdn.jsdelivr.net/npm/d3@5.16.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/c3@0.7.20/c3.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/c3@0.7.20/c3.min.css" rel="stylesheet">
 </head><body>
 <h1>人流データ</h1>
 
@@ -7,9 +10,6 @@
 <script type="module">
 import { ArrayUtil } from "https://js.sabae.cc/ArrayUtil.js";
 import { fetchDataJinryu } from "./fetchDataJinryu.js";
-
-import { initC3 } from "https://code4fukui.github.io/c3-es/c3-es.js";
-const c3 = initC3(window);
 
 const param = new URL(location.href).searchParams;
 const seliccid = param.get("iccid") || "8981040000001207740";
