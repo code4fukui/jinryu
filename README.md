@@ -1,69 +1,42 @@
 # jinryu
 
-## 人流センサーデータ
+> 日本語のREADMEはこちらです: [README.ja.md](README.ja.md)
 
-- PUSHかんたんオープンデータ [種別](https://push.sabae.cc/#type=https://push.sabae.cc/1003) [集約データCSV](https://push.sabae.cc/1005.csv)
+A web application for visualizing people flow sensor data. This project utilizes the PUSH Open Data platform to fetch and display real-time and historical sensor information.
 
-### 設定方法
+## Demo
 
-1. MixServerに登録
-2. iccidを[PUSHかんたんオープンデータ 人流センサー](https://push.sabae.cc/#type=https://push.sabae.cc/1003)に登録
-3. 登録したパスコード付きURLを[qrmaker](https://code4fukui.github.io/qrmaker/)などでQRコードにして、デバイス所有者に渡す
-4. デバイス所有者に、エリア名、設置場所などを編集してもらう
-5. 本稼働したidを[人流センサー集約データ](https://push.sabae.cc/1005)のIDsに空白なしコンマ区切りで追記する（管理者のみ）
+- [People Flow Data - FTAS Open Data](https://code4fukui.github.io/jinryu/)
+- [People Flow Data AICAM - FTAS Open Data](https://code4fukui.github.io/jinryu/aicam.html)
 
-## daily backup with [MixSoda-util](https://github.com/code4fukui/MixSoda-util/)
+## Features
 
-### setup
+- **Interactive Charts**: Visualize people flow data by sensor location with daily and hourly aggregations.
+- **Date Range Filtering**: Select a custom date range to analyze historical trends.
+- **Demographic Data**: The AICAM demo provides a breakdown of people flow by gender and age group.
+- **CSV Export**: Download the raw data for your selected time range and location for offline analysis.
 
-```sh
-mkdir .github
-mkdir .github/workflows
-cat > .github/workflows/scheduled-backup.yml
-```
+## How It Works
 
-```yml
-name: Scheduled 
+This project is a static web application built with HTML and JavaScript, hosted on GitHub Pages.
+- Live data for the current day is fetched directly from the MixSoda API.
+- Historical data is served from CSV files stored within the repository's `/data` directory.
+- A scheduled GitHub Action runs daily to back up the latest data, ensuring a comprehensive historical record.
 
-on:
-  schedule:
-    # 1:31分に実行 1(JST)-9+24=16(UTC)
-    - cron: '31 16 * * *'
+## Usage
 
-jobs:
-  build:
-    name: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-      - name: make
-        env:
-          SECRET_CODE: ${{ secrets.code }}
-        run: |
-          deno run -A https://code4fukui.github.io/MixSoda-util/backup.js $SECRET_CODE
-      - name: commit and push
-        run: |
-          git config --global user.email "workflow@example.com"
-          git config --global user.name "workflow user"
-          git add .
-          git commit -m 'update data' && git push ${REPO} HEAD:${{github.event.pull_request.head.ref}} || true
-          git push
-```
+No installation is required. Simply open one of the demo websites in your browser.
 
-## MixServer
+1.  Select an area and a specific sensor location from the dropdown menus.
+2.  Use the date pickers to define the time range for the data you want to view.
+3.  The charts will automatically update to reflect your selection.
+4.  Click the "CSV download" button to export the currently displayed data.
 
-すべてのMixSoda:
-```
-GET http://mixsoda.io:2048/(token).csv[オプション]
-```
+## Data / API
 
-特定のMixSoda:
-```
-GET http://mixsoda.io:2048/(token)/(ICCID).csv[オプション]
-```
+- [PUSH Open Data for People Flow Sensors](https://push.sabae.cc/#type=https://push.sabae.cc/1003)
+- [People Flow Sensor Aggregated Data](https://push.sabae.cc/1005.csv)
 
-- [reference | mixsoda.io](https://mixsoda.io/reference.html)
+## License
 
+MIT License
